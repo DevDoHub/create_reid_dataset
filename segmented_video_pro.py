@@ -2,26 +2,35 @@ from ultralytics import YOLO
 import cv2
 import os
 
+
+"""
+检测视频中出现人到人消失，分别保存成一个小视频
+遍历一遍, 保存
+"""
+
 # 加载YOLOv8模型
-model = YOLO('yolov8n.pt')  # 使用合适的YOLOv8模型
+# model = YOLO('yolov8n.pt').to('cuda')  # 将模型加载到GPU上
+model = YOLO('yolov8n.pt')  # 请使用适合的模型路径
 
 # 输入视频文件路径
-video_path = 'test.mp4'  # 替换为你的视频路径
-output_folder = 'output_videos'
+video_path = 'test.mp4'  # 替换为你的输入视频路径
+output_folder = 'output_videos1'
 os.makedirs(output_folder, exist_ok=True)
 
 # 打开视频文件
 cap = cv2.VideoCapture(video_path)
 fps = cap.get(cv2.CAP_PROP_FPS)  # 获取视频的帧率
-frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))  # 获取视频的总帧数
+frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-# 定义变量记录人物出现的时间段
-person_appear_frames = []
-start_frame = None
-end_frame = None
+# 初始化变量
+frame_index = 0
+recording = False  # 标记当前是否在记录视频
+out = None  # 视频写入器
+clip_index = 1  # 小视频编号
 
 # 遍历视频的每一帧
-for i in range(frame_count):
+while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
@@ -34,53 +43,44 @@ for i in range(frame_count):
     for result in results:
         for box in result.boxes:
             if int(box.cls.item()) == 0:  # 0表示人物
+
+                # # 获取边界框坐标并裁剪图像
+                # x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                # cropped_person = frame[y1:y2, x1:x2]
+
+                # # 保存裁剪结果
+                # crop_path = os.path.join(output_folder, f'person_标签(视频段){clip_index}_{x1}_{y1}.jpg')
+                # # 128*256
+                # cropped_person = cv2.resize(cropped_person, (256, 128))
+                # cv2.imwrite(crop_path, cropped_person)
+
                 person_detected = True
                 break
 
-    # 如果检测到人物
+    # 判断是否需要开始或停止录制
     if person_detected:
-        if start_frame is None:  # 第一次检测到人物
-            start_frame = i
-        end_frame = i  # 更新结束帧为当前帧
-    else:
-        # 如果没有检测到人物且之前有检测到，记录时间段
-        if start_frame is not None and end_frame is not None:
-            person_appear_frames.append((start_frame, end_frame))
-            start_frame = None
-            end_frame = None
+        if not recording:  # 如果当前没有录制并检测到人物，开始录制
+            output_video_path = os.path.join(output_folder, f'person_clip_{clip_index}.mp4')
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
+            recording = True
+            clip_index += 1
+            print(f"开始录制小视频: {output_video_path}")
 
-# 处理视频尾部可能存在的未保存段
-if start_frame is not None and end_frame is not None:
-    person_appear_frames.append((start_frame, end_frame))
-
-cap.release()  # 释放视频资源
-
-# 创建并保存小视频片段
-cap = cv2.VideoCapture(video_path)
-for idx, (start, end) in enumerate(person_appear_frames):
-    # 计算前5秒和后5秒的帧数
-    start_cut = max(0, start - int(5 * fps))
-    end_cut = min(frame_count - 1, end + int(5 * fps))
-
-    # 设置视频写入器
-    output_video_path = os.path.join(output_folder, f'person_clip_{idx + 1}.mp4')
-    cap.set(cv2.CAP_PROP_POS_FRAMES, start_cut)  # 从剪辑起始帧开始
-
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # 设置编码格式
-    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
-
-    # 写入剪辑视频片段
-    for i in range(start_cut, end_cut + 1):
-        ret, frame = cap.read()
-        if not ret:
-            break
+        # 写入当前帧
         out.write(frame)
+    else:
+        if recording:  # 如果当前正在录制但没有检测到人物，停止录制
+            out.release()
+            recording = False
+            print("停止录制并保存小视频")
 
-    out.release()
-    print(f"保存小视频: {output_video_path}")
+    frame_index += 1
+
+# 释放资源
+if recording:
+    out.release()  # 如果最后仍在录制，释放写入器
 
 cap.release()
 cv2.destroyAllWindows()
-print("所有小视频片段已保存完毕！")
+print("视频处理完毕，所有小视频已保存！")

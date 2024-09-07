@@ -9,6 +9,7 @@ import os
 """
 
 # 加载预训练的YOLOv8模型
+# model = YOLO('yolov8n.pt').to('cuda')  # 将模型加载到GPU上
 model = YOLO('yolov8n.pt')  # 选择适当的YOLOv8模型，如yolov8n.pt、yolov8s.pt等
 
 # 设置视频路径和输出文件夹
