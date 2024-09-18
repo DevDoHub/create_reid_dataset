@@ -26,3 +26,4 @@ data/
 *.pth.tar
 *.pkl
 *.pt
+*.cover
