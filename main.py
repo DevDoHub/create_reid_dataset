@@ -20,7 +20,7 @@ model = YOLO('yolov8n.pt')  # 请使用适合的模型路径
 
 # 输入视频文件路径
 input_video_path = './test.mp4'  # 替换为你的输入视频路径
-input_video_path = './v_id'  # 替换为你的输入目录路径
+# input_video_path = './v_id'  # 替换为你的输入目录路径
 
 now = datetime.datetime.now()
 output_folder_prefix = 'output_videos' + now.strftime("%Y%m%d%H%M%S")
@@ -50,8 +50,8 @@ os.makedirs(output_folder_prefix, exist_ok=True)
 
 for input_video_file in input_video_files:
     
-    output_v_folder = os.path.join(output_folder_prefix, "video_" + os.path.splitext(input_video_file)[0])
-    output_i_folder = os.path.join(output_folder_prefix, "image_" + os.path.splitext(input_video_file)[0])
+    output_v_folder = os.path.join(output_folder_prefix, "video_" + os.path.splitext(os.path.split(input_video_file)[-1])[0])
+    output_i_folder = os.path.join(output_folder_prefix, "image_" + os.path.splitext(os.path.split(input_video_file)[-1])[0])
 
     # 创建输出文件夹
     os.makedirs(output_v_folder, exist_ok=True)
@@ -81,6 +81,7 @@ for input_video_file in input_video_files:
 
         # 检查是否检测到人物
         for result in results:
+            box_index = 1
             for box in result.boxes:
                 if int(box.cls.item()) == 0:  # 0表示人物
 
@@ -93,12 +94,13 @@ for input_video_file in input_video_files:
                         os.makedirs(_output_i_folder)
 
                     # 保存裁剪结果
-                    crop_path = os.path.join(_output_i_folder, f'person_标签_{clip_index}_第{frame_index}帧_{x1}_{y1}.jpg')
+                    crop_path = os.path.join(_output_i_folder, f'{str(clip_index).zfill(4)}_c1s1_{frame_index}_{box_index}.jpg')
                     # 128*256
                     cropped_person = cv2.resize(cropped_person, (128, 256))
                     cv2.imwrite(crop_path, cropped_person)
 
                     person_detected = True
+                    box_index += 1
                     break
 
         # 判断是否需要开始或停止录制
