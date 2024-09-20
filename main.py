@@ -8,8 +8,6 @@ import os
 检测视频中出现人到人消失，分别保存成一个小视频
 遍历一遍, 保存
 
-1.视频中人连续2帧以上识别到才会保存一个小视频, 并且将人物裁剪出来保存
-
 目前支持mp4格式的视频, 需要其他请自行修改
 
 """
@@ -48,6 +46,7 @@ if not input_video_files:
 os.makedirs(output_folder_prefix, exist_ok=True)
 
 
+clip_index = 1  # 小视频编号
 for input_video_file in input_video_files:
     
     output_v_folder = os.path.join(output_folder_prefix, "video_" + os.path.splitext(os.path.split(input_video_file)[-1])[0])
@@ -67,7 +66,7 @@ for input_video_file in input_video_files:
     frame_index = 0
     recording = False  # 标记当前是否在记录视频
     out = None  # 视频写入器
-    clip_index = 1  # 小视频编号
+    # clip_index = 1  # 小视频编号
 
     # 遍历视频的每一帧
     while cap.isOpened():
