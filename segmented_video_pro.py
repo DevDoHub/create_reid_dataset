@@ -13,8 +13,8 @@ import os
 model = YOLO('yolov8n.pt')  # 请使用适合的模型路径
 
 # 输入视频文件路径
-video_path = 'test.mp4'  # 替换为你的输入视频路径
-output_folder = 'output_videos1'
+video_path = '/home/cat/project/create_reid_dataset/test.mp4'  # 替换为你的输入视频路径
+output_folder = '/home/cat/project/create_reid_dataset/output_videos1'
 os.makedirs(output_folder, exist_ok=True)
 
 # 打开视频文件
@@ -44,18 +44,20 @@ while cap.isOpened():
         for box in result.boxes:
             if int(box.cls.item()) == 0:  # 0表示人物
 
-                # # 获取边界框坐标并裁剪图像
-                # x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                # cropped_person = frame[y1:y2, x1:x2]
+                # 获取边界框坐标并裁剪图像
+                x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                cropped_person = frame[y1:y2, x1:x2]
 
-                # # 保存裁剪结果
-                # crop_path = os.path.join(output_folder, f'person_标签(视频段){clip_index}_{x1}_{y1}.jpg')
-                # # 128*256
-                # cropped_person = cv2.resize(cropped_person, (256, 128))
-                # cv2.imwrite(crop_path, cropped_person)
+                # 保存裁剪结果
+                f = 'output_' + str(clip_index)
+                t_f = os.path.join(output_folder, f)
+                os.makedirs(t_f, exist_ok=True)
+                crop_path = os.path.join(t_f, f'person_标签(视频段){clip_index}_{x1}_{y1}.jpg')
+                # 128*256
+                cropped_person = cv2.resize(cropped_person, (128, 256))
+                cv2.imwrite(crop_path, cropped_person)
 
                 person_detected = True
-                break
 
     # 判断是否需要开始或停止录制
     if person_detected:
