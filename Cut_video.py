@@ -17,7 +17,7 @@ import os
 model = YOLO('yolov8n.pt')  # 请使用适合的模型路径
 
 # 输入视频文件路径
-input_video_path = './test.mp4'  # 替换为你的输入视频路径
+input_video_path = '/home/leo/cat/project/create_reid_dataset/视频数据/5.11全天'  # 替换为你的输入视频路径
 # input_video_path = './v_id'  # 替换为你的输入目录路径
 
 now = datetime.datetime.now()
