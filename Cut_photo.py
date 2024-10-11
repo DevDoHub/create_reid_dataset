@@ -20,10 +20,10 @@ model = YOLO('yolov8n.pt')  # 请使用适合的模型路径
 
 # 输入视频文件路径
 # input_video_path = './test.mp4'  # 替换为你的输入视频路径
-input_video_path = './output_videos_20240920144211/video'  # 替换为你的输入目录路径
+input_video_path = './output_videos20241011143411'  # 替换为你的输入目录路径
 
 now = datetime.datetime.now()
-output_i_folder = './output_videos_20240920144211/image'
+output_i_folder = './output_photo/image'
 os.makedirs(output_i_folder, exist_ok=True)
 
 clip_index = 0  # 小视频编号
@@ -58,8 +58,8 @@ for input_video_file in input_video_files:
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     duration = frame_count / fps
-    if duration < 1:
-        print("视频时长小于一秒，跳过处理")
+    if frame_count < 5:
+        print("视频时长小于半秒，跳过处理")
         cap.release()
         continue
     # 初始化变量
@@ -68,7 +68,7 @@ for input_video_file in input_video_files:
     recording = False  # 标记当前是否在记录视频
     out = None  # 视频写入器
     # clip_index = 1  # 小视频编号
-
+    frame_index = 1
     # 遍历视频的每一帧
     while cap.isOpened():
         ret, frame = cap.read()
@@ -78,6 +78,10 @@ for input_video_file in input_video_files:
         # 使用YOLOv8进行检测
         results = model(frame)
         person_detected = False
+
+        _output_i_folder = os.path.join(output_i_folder, str(clip_index))
+        if not os.path.exists(_output_i_folder):
+            os.makedirs(_output_i_folder)
 
         # 检查是否检测到人物
         for result in results:
@@ -89,9 +93,7 @@ for input_video_file in input_video_files:
                     x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                     cropped_person = frame[y1:y2, x1:x2]
 
-                    _output_i_folder = os.path.join(output_i_folder, str(clip_index))
-                    if not os.path.exists(_output_i_folder):
-                        os.makedirs(_output_i_folder)
+
 
                     # 保存裁剪结果
                     crop_path = os.path.join(_output_i_folder, f'{str(clip_index).zfill(4)}_c1s1_{frame_index}_{box_index}.jpg')
@@ -102,6 +104,8 @@ for input_video_file in input_video_files:
                     person_detected = True
                     box_index += 1
                     break
+        
+        frame_index += 1
 
 
     # 释放资源

@@ -26,4 +26,7 @@ data/
 *.pth.tar
 *.pkl
 *.pt
+*.cover.*
 *.cover
+*.Identifier
+*.zip
